@@ -1,0 +1,42 @@
+#Generating Burn-up Charts
+
+- Assumptions:
+  - Go is properly installed
+  - $GOPATH is set to where Go is installed
+  - the path to $GOPATH/bin is in your environment path
+  - This project has been installed using "go get"
+  - The resultant files will be placed under $GOPATH\Burnup
+- In JIRA:
+  - Select "Advanced issue search" under Filters menu
+  - Select the relevant project
+  - Select "Export Excel CSV (all fields)" option under the "Export" button
+- In console:
+  - $ cd $GOPATH
+  - $ mv ~/Downloads/JIRA\ \(7\).csv Burnup/Exports/M3\ Extract\ YYYY-MM-DD.csv
+- In a code editor:
+  - Load an editor and check to make sure the column indexes match what is in main.go
+  - If they do not, update the source code and recompile
+    - In console:
+    - $ go install github.com/ptdecker/burnup
+- In console:
+  - $ burnup < Burnup/Exports/M3\ Extract\ 2020-MM-DD.csv
+- In spreadsheet (instructions are for Google Sheet specifically):
+  - Open prior most recent burn-up chart file
+  - Cloan it to a new file for the same date as the snapshot
+  - On the 'summary' tab:
+    - Add any rows so that the rows run to the end of the current month.
+    - Copy the VALUES in the 'new' colums to the 'prior' columns
+  - On the 'snapshot' tab:
+    - Use 'Import' under the 'File' menu to 'Upload' the snapshot csv file ("Backlog Snapshot YYYY-MM-DD.csv") corresponding to the snapshot date.  Select 'Replace current sheet' as the Import Location option when importing.
+  - On the 'totals' tab:
+    - Use 'Import' under the 'File' menu to 'Upload' the totals csv file ("Totals YYYY-MM-DD.csv") corresponding to the snapshot date.  Select 'Replace current sheet' as the Import Location option when importing.
+  - Back on the 'snapshot' tab:
+    - Copy the formulas in the 'New' and 'Change' columns down to the row corresponding to the snapshot date
+    - Copy the formula in the SECOND row of the 'Total Opened' and 'Total Closed' columns down through all the rows that have a value in the 'Prior' column.  Note: This formula creates a running total of the opened and closed points by adding the previous total to the daily value for that day using the information from the prior snapshot
+    - For the first row that does not have a prior value, modify the formula to add the prior total plus the 'new' value plus the summation of all the values in the 'change' column for all rows that have a prior value.  This adds that day's points to the accumulated value AND it adjust the total to account for all the changes made to the prior days since the last snapshot.  This is done so that any back-dated changes (i.e. changes to points opened or closed and for deleted roadmap items) in the prior days.
+    - For the rest of the rows, adjust the formula in the total columns to be the accumulation of the prior total plus the 'new' column value.  This will continue the accumulation of point opened and closed for the days that are in the new snapshot but were not in the prior
+    - Double-check yourself.  The total accumulated points in the opened and closed columns should exactly match the summation of the new respective new column
+    - All the above has the effect of preserving historical accumulated values and moving the changes to the point in the history where our prior data left off.  And then moves forward with the known values.  This prevents needing to take a snapshot every day to keep accurate
+    - Note the number of the last row now in the summary chart (the end of the month date)
+  - If the dates on the summary chart were extended to include a new month, on the 'burnup' chart tab:
+    - 'Edit' the chart and adjust the 'data range' so that it includes the last row now in the summary chart
